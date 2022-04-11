@@ -2,6 +2,8 @@ import { Alert, Button, Container, Snackbar, TextField, Typography } from "@mui/
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from 'react';
 import { useEffect } from 'react';
+import axios from "axios";
+
 
 const Auth = () => {
 
@@ -11,6 +13,7 @@ const Auth = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [signup, setSignup] = useState(false);
+    const BASE_URL = process.env.REACT_APP_API_URL;
 
     useEffect(() => {
         getAuth().onAuthStateChanged(user => {
@@ -30,8 +33,24 @@ const Auth = () => {
                 .then((userCredential) => {
                     const user = userCredential.user;
                     console.log('user', user);
-                    setError('')
-                    setSuccess('Signed up successfully!');
+                    axios.post(`${BASE_URL}/auth/signup`, {
+                        authtoken: user.accessToken,
+                        name: name,
+                    },
+                        {
+                            params: {
+                                apiKey: process.env.REACT_APP_API_KEY
+                            }
+                        }
+                    ).then(res => {
+                        console.log('res', res);
+                        setError('')
+                        setSuccess('Signed up successfully!');
+                    }).catch(err => {
+                        console.log('err', err);
+                        setSuccess('');
+                        setError(err.message);
+                    });
                 })
                 .catch((error) => {
                     console.log('err', error);
@@ -43,8 +62,23 @@ const Auth = () => {
                 .then((userCredential) => {
                     const user = userCredential.user;
                     console.log('user', user);
-                    setError('')
-                    setSuccess('Logged in successfully!');
+                    axios.post(`${BASE_URL}/auth/login`, {
+                        authtoken: user.accessToken,
+                    },
+                        {
+                            params: {
+                                apiKey: process.env.REACT_APP_API_KEY
+                            }
+                        }
+                    ).then(res => {
+                        console.log('res', res);
+                        setError('')
+                        setSuccess('Logged in successfully!');
+                    }).catch(err => {
+                        console.log('err', err);
+                        setSuccess('');
+                        setError(err.message);
+                    });
                 })
                 .catch((error) => {
                     console.log('err', error);
@@ -121,7 +155,8 @@ const Auth = () => {
                         variant="contained"
                         color="primary"
                         sx={{
-                            marginTop: '1rem',
+                            marginTop: '0.5rem',
+                            marginBottom: '1rem',
                             width: '300px',
                         }}
                     >
@@ -139,18 +174,16 @@ const Auth = () => {
                     marginTop: '1rem',
                 }}
             >
-                {signup ? 'Already have an account?' : 'Don\'t have an account?'}
+                {signup ? 'Already have an account? ' : 'Don\'t have an account? '}
                 <span
                     onClick={() => setSignup(!signup)}
-                    sx={{
+                    style={{
                         cursor: 'pointer',
                         color: 'primary',
-                        fontWeight: 'bold',
-                        TextDecoder: 'underline',
-                        cursor: 'pointer',
+                        textDecoration: 'underline',
                     }}
                 >
-                    {signup ? ' Login' : ' Sign Up'}
+                    {signup ? 'Login' : 'Sign Up'}
                 </span>
             </Typography>
             <Snackbar

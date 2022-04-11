@@ -20,7 +20,7 @@ function App () {
     getAuth().onAuthStateChanged(user => {
         if (user) {
             console.log('user logged in', user);
-            setIsLoggedIn(true);
+            // setIsLoggedIn(true);
         } else {
             console.log('user logged out');
             setIsLoggedIn(false);

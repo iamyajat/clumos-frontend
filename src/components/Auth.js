@@ -1,5 +1,5 @@
-import { Button, Container, TextField, Typography } from "@mui/material";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { Alert, Button, Container, Snackbar, TextField, Typography } from "@mui/material";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from 'react';
 import { useEffect } from 'react';
 
@@ -9,6 +9,8 @@ const Auth = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const [signup, setSignup] = useState(false);
 
     useEffect(() => {
         getAuth().onAuthStateChanged(user => {
@@ -23,16 +25,33 @@ const Auth = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         const auth = getAuth();
-        createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                console.log('user', user);
-                setError('')
-            })
-            .catch((error) => {
-                console.log('err', error);
-                setError(error.message);
-            });
+        if (signup) {
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    console.log('user', user);
+                    setError('')
+                    setSuccess('Signed up successfully!');
+                })
+                .catch((error) => {
+                    console.log('err', error);
+                    setError(error.message);
+                    setSuccess('');
+                });
+        } else {
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    console.log('user', user);
+                    setError('')
+                    setSuccess('Logged in successfully!');
+                })
+                .catch((error) => {
+                    console.log('err', error);
+                    setError(error.message);
+                    setSuccess('');
+                });
+        }
     };
 
     return (
@@ -56,20 +75,22 @@ const Auth = () => {
                     marginBottom: '2rem',
                 }}
             >
-                Sign Up
+                {signup ? 'Sign Up' : 'Login'}
             </Typography>
             <form onSubmit={handleSubmit}>
-                <TextField
-                    label="Name"
-                    variant="outlined"
-                    required
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    sx={{
-                        marginBottom: '1rem',
-                        width: '300px',
-                    }}
-                /><br />
+                {signup ? (<>
+                    <TextField
+                        label="Name"
+                        variant="outlined"
+                        required
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                        sx={{
+                            marginBottom: '1rem',
+                            width: '300px',
+                        }}
+                    />
+                    <br /></>) : null}
                 <TextField
                     label="Email"
                     variant="outlined"
@@ -104,7 +125,7 @@ const Auth = () => {
                             width: '300px',
                         }}
                     >
-                        Signup
+                        {signup ? 'Sign Up' : 'Login'}
                     </Button>
                 </div>
             </form>
@@ -112,14 +133,38 @@ const Auth = () => {
                 variant="body1"
                 component="p"
                 sx={{
-                    fontSize: '1.5rem',
+                    fontSize: '1rem',
                     color: 'secondary',
                     textAlign: 'center',
                     marginTop: '1rem',
                 }}
             >
-                {error}
+                {signup ? 'Already have an account?' : 'Don\'t have an account?'}
+                <span
+                    onClick={() => setSignup(!signup)}
+                    sx={{
+                        cursor: 'pointer',
+                        color: 'primary',
+                        fontWeight: 'bold',
+                        TextDecoder: 'underline',
+                        cursor: 'pointer',
+                    }}
+                >
+                    {signup ? ' Login' : ' Sign Up'}
+                </span>
             </Typography>
+            <Snackbar
+                open={error !== ''}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert severity="error">{error}</Alert>
+            </Snackbar>
+            <Snackbar
+                open={success !== ''}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert severity="success">{success}</Alert>
+            </Snackbar>
         </Container>
     );
 }

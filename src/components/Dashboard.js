@@ -15,14 +15,14 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
-import { ExpandLess, ExpandMore, Settings } from '@mui/icons-material';
+import { ExpandLess, ExpandMore, Logout, Settings } from '@mui/icons-material';
 import { Collapse, ListItemButton } from '@mui/material';
+import { getAuth, signOut } from 'firebase/auth';
 const drawerWidth = 240;
 
 const Dashboard = (props) => {
     const { window } = props;
     const [mobileOpen, setMobileOpen] = useState(false);
-
     const [openProject, setOpenProject] = useState(true);
 
     const handleClickProject = () => {
@@ -39,13 +39,22 @@ const Dashboard = (props) => {
         setMobileOpen(!mobileOpen);
     };
 
+    const logoutAuth = () => {
+        const auth = getAuth();
+        signOut(auth).then(() => {
+            // Sign-out successful.
+        }).catch((error) => {
+            // An error happened.
+        });
+    };
+
     const drawer = (
         <div>
             <Toolbar />
             <List>
                 <ListItemButton onClick={handleClickProject}>
-                    <ListItemText primary="Projects" sx={{ pl: 2 }}/>
-                    {openProject ? <ExpandLess sx={{ mr: 2 }}/> : <ExpandMore sx={{ mr: 2 }}/>}
+                    <ListItemText primary="Projects" sx={{ pl: 2 }} />
+                    {openProject ? <ExpandLess sx={{ mr: 2 }} /> : <ExpandMore sx={{ mr: 2 }} />}
                 </ListItemButton>
                 <Collapse in={openProject} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
@@ -60,8 +69,8 @@ const Dashboard = (props) => {
             <Divider />
             <List>
                 <ListItemButton onClick={handleClickEvent}>
-                <ListItemText primary="Events" sx={{ pl: 2 }}/>
-                    {openEvent ? <ExpandLess sx={{ mr: 2 }}/> : <ExpandMore sx={{ mr: 2 }}/>}
+                    <ListItemText primary="Events" sx={{ pl: 2 }} />
+                    {openEvent ? <ExpandLess sx={{ mr: 2 }} /> : <ExpandMore sx={{ mr: 2 }} />}
                 </ListItemButton>
                 <Collapse in={openEvent} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
@@ -78,11 +87,22 @@ const Dashboard = (props) => {
                 {['Settings'].map((text, index) => (
                     <ListItem button key={text}>
                         <ListItemIcon>
-                            <Settings sx={{ ml: 1 }}/>
+                            <Settings sx={{ ml: 1 }} />
                         </ListItemIcon>
                         <ListItemText primary={text} />
                     </ListItem>
                 ))}
+            </List>
+            {/* logout button stick at bottom of drawer */}
+            <List>
+                <ListItem button key="Logout"
+                    onClick={logoutAuth}
+                >
+                    <ListItemIcon>
+                        <Logout sx={{ ml: 1 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Logout" />
+                </ListItem>
             </List>
         </div>
     );

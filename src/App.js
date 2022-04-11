@@ -5,15 +5,32 @@ import { getAnalytics } from "firebase/analytics";
 import theme from './theme';
 import { ThemeProvider } from '@emotion/react';
 import firebaseConfig from './firebaseConfig';
+import { useState, useEffect } from 'react';
+import { getAuth } from "firebase/auth";
+
+
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 
-function App() {
+function App () {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    getAuth().onAuthStateChanged(user => {
+        if (user) {
+            console.log('user logged in', user);
+            setIsLoggedIn(true);
+        } else {
+            console.log('user logged out');
+            setIsLoggedIn(false);
+        }
+    });
+}, []);
+
   return (
     <ThemeProvider theme={theme}>
-      <Auth />
-      {/* <Dashboard /> */}
+      {isLoggedIn ? <Dashboard /> : <Auth />}
     </ThemeProvider>
   );
 }

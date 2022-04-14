@@ -7,6 +7,7 @@ import { ThemeProvider } from '@emotion/react';
 import firebaseConfig from './firebaseConfig';
 import { useState, useEffect } from 'react';
 import { getAuth } from "firebase/auth";
+import ClubSelector from './components/ClubSelector';
 
 
 
@@ -20,7 +21,7 @@ function App () {
     getAuth().onAuthStateChanged(user => {
         if (user) {
             console.log('user logged in', user);
-            // setIsLoggedIn(true);
+            setIsLoggedIn(true);
         } else {
             console.log('user logged out');
             setIsLoggedIn(false);
@@ -30,7 +31,7 @@ function App () {
 
   return (
     <ThemeProvider theme={theme}>
-      {isLoggedIn ? <Dashboard /> : <Auth />}
+      {isLoggedIn ? <ClubSelector /> : <Auth />}
     </ThemeProvider>
   );
 }

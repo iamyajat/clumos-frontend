@@ -35,7 +35,7 @@ const ClubSelector = (props) => {
             }
         ).then(res => {
             console.log('res', res);
-            // setClubs(res.data);
+            getClubs();
         }).catch(err => {
             console.log('err', err);
         });
@@ -49,7 +49,7 @@ const ClubSelector = (props) => {
     };
 
     // get clubs
-    useEffect(() => {
+    const getClubs = () => {
         axios.get(`${BASE_URL}/api/getClubs`, {
             headers: {
                 Authorization: `Bearer ${props.jwt}`
@@ -63,7 +63,11 @@ const ClubSelector = (props) => {
         }).catch(err => {
             console.log('err', err);
         });
-    }, [ props.jwt ]);
+    };
+
+    useEffect(() => {
+        getClubs();
+    }, []);
 
     return (
         <Container

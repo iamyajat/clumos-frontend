@@ -14,11 +14,16 @@ import MailIcon from '@mui/icons-material/Mail';
 import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import { useState } from 'react';
-import { ExpandLess, ExpandMore, Logout, Settings } from '@mui/icons-material';
-import { Collapse, ListItemButton } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { AddLocation, EditNotifications, ExpandLess, ExpandMore, Logout, Settings, Edit } from '@mui/icons-material';
+import { Collapse, Fab, ListItemButton } from '@mui/material';
 import { getAuth, signOut } from 'firebase/auth';
+import axios from 'axios';
+import MessageCard from './MessageCard';
+
 const drawerWidth = 240;
+const BASE_URL = process.env.REACT_APP_API_URL;
+
 
 const Dashboard = (props) => {
     const { window } = props;
@@ -46,6 +51,65 @@ const Dashboard = (props) => {
         }).catch((error) => {
             // An error happened.
         });
+    };
+
+    // get announcements
+    const [announcements, setAnnouncements] = useState([]);
+    const getAnnouncements = () => {
+        // console.log(process.env.REACT_APP_API_KEY);
+        axios.post(`${BASE_URL}/api/getAnnouncements`, {
+            clubId: `${props.clubId}`,
+        }, {
+            headers: {
+                Authorization: `Bearer ${props.jwt}`
+            },
+            params: {
+                apiKey: process.env.REACT_APP_API_KEY
+            }
+        }).then(res => {
+            console.log('announcements', res);
+            setAnnouncements(res.data.announcements);
+        }).catch(err => {
+            console.log('err', err);
+        });
+    };
+    useEffect(() => {
+        getAnnouncements();
+    }, [props.clubId]);
+
+    // post announcement
+    const postAnnouncement = (announcement) => {
+        axios.post(`${BASE_URL}/api/newAnnouncement`,
+            {
+                clubId: `${props.clubId}`,
+                title: `${announcement.title}`,
+                content: `${announcement.content}`,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${props.jwt}`
+                },
+                params: {
+                    apiKey: process.env.REACT_APP_API_KEY
+                }
+            }
+        ).then(res => {
+            console.log('res', res);
+            getAnnouncements();
+        }).catch(err => {
+            console.log('err', err);
+        });
+    };
+
+    // test post announcement
+    const testPostAnnouncement = () => {
+        const title = prompt('Enter announcement title', '');
+        const content = prompt('Enter announcement content', '');
+        const announcement = {
+            title,
+            content
+        };
+        postAnnouncement(announcement);
     };
 
     const drawer = (
@@ -108,6 +172,7 @@ const Dashboard = (props) => {
     );
 
     const container = window !== undefined ? () => window().document.body : undefined;
+    // console.log()
 
     return (
         <Box sx={{ display: 'flex' }}>
@@ -130,7 +195,7 @@ const Dashboard = (props) => {
                         <MenuIcon />
                     </IconButton>
                     <Typography variant="h6" noWrap component="div">
-                        Responsive drawer
+                        {props.clubName}
                     </Typography>
                 </Toolbar>
             </AppBar>
@@ -171,33 +236,21 @@ const Dashboard = (props) => {
                 sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
             >
                 <Toolbar />
-                <Typography paragraph>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-                    tempor incididunt ut labore et dolore magna aliqua. Rhoncus dolor purus non
-                    enim praesent elementum facilisis leo vel. Risus at ultrices mi tempus
-                    imperdiet. Semper risus in hendrerit gravida rutrum quisque non tellus.
-                    Convallis convallis tellus id interdum velit laoreet id donec ultrices.
-                    Odio morbi quis commodo odio aenean sed adipiscing. Amet nisl suscipit
-                    adipiscing bibendum est ultricies integer quis. Cursus euismod quis viverra
-                    nibh cras. Metus vulputate eu scelerisque felis imperdiet proin fermentum
-                    leo. Mauris commodo quis imperdiet massa tincidunt. Cras tincidunt lobortis
-                    feugiat vivamus at augue. At augue eget arcu dictum varius duis at
-                    consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem donec massa
-                    sapien faucibus et molestie ac.
-                </Typography>
-                <Typography paragraph>
-                    Consequat mauris nunc congue nisi vitae suscipit. Fringilla est ullamcorper
-                    eget nulla facilisi etiam dignissim diam. Pulvinar elementum integer enim
-                    neque volutpat ac tincidunt. Ornare suspendisse sed nisi lacus sed viverra
-                    tellus. Purus sit amet volutpat consequat mauris. Elementum eu facilisis
-                    sed odio morbi. Euismod lacinia at quis risus sed vulputate odio. Morbi
-                    tincidunt ornare massa eget egestas purus viverra accumsan in. In hendrerit
-                    gravida rutrum quisque non tellus orci ac. Pellentesque nec nam aliquam sem
-                    et tortor. Habitant morbi tristique senectus et. Adipiscing elit duis
-                    tristique sollicitudin nibh sit. Ornare aenean euismod elementum nisi quis
-                    eleifend. Commodo viverra maecenas accumsan lacus vel facilisis. Nulla
-                    posuere sollicitudin aliquam ultrices sagittis orci a.
-                </Typography>
+                {announcements.map((announcement, index) => (
+                    <MessageCard title={announcement.title} content={announcement.content} key={index} />
+                ))}
+                <Fab color="secondary"
+                    aria-label="edit"
+                    onClick={testPostAnnouncement}
+                    sx={{
+                        position: 'fixed',
+                        bottom: '1rem',
+                        right: '1rem',
+                        zIndex: '1000',
+                    }}
+                >
+                    <Edit />
+                </Fab>
             </Box>
         </Box>
     );
@@ -205,10 +258,6 @@ const Dashboard = (props) => {
 
 
 Dashboard.propTypes = {
-    /**
-     * Injected by the documentation to work in an iframe.
-     * You won't need it on your project.
-     */
     window: PropTypes.func,
 };
 

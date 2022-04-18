@@ -3,6 +3,7 @@ import { Avatar, Container, Divider, List, ListItem, ListItemAvatar, ListItemIco
 import axios from 'axios';
 import { getAuth, signOut } from "firebase/auth";
 import { useState, useEffect } from 'react';
+import Dashboard from './Dashboard';
 
 const BASE_URL = process.env.REACT_APP_API_URL;
 
@@ -18,6 +19,8 @@ const ClubSelector = (props) => {
     };
 
     const [clubs, setClubs] = useState([]);
+    const [clubId, setClubId] = useState("");
+    const [clubName, setClubName] = useState("");
 
     // add clubs
     const addClub = (clubName) => {
@@ -65,11 +68,19 @@ const ClubSelector = (props) => {
         });
     };
 
+    // open dashboard with club_id
+    const openDashboard = (club_id, club_name) => {
+        setClubName(club_name);
+        setClubId(club_id);
+        console.log('clubName', clubName);
+    }
+
+
     useEffect(() => {
         getClubs();
     }, []);
 
-    return (
+    return clubId ? <Dashboard clubId={clubId} clubName={clubName} jwt={props.jwt} /> : (
         <Container
             sx={{
                 alignItems: 'center',
@@ -109,6 +120,7 @@ const ClubSelector = (props) => {
                             width: '300px',
                             alignItems: 'center',
                         }}
+                        onClick={() => openDashboard(club.club_id, club.club_name)}
                     >
                         <ListItemAvatar>
                             <Avatar src={club.logo_url == "" ?

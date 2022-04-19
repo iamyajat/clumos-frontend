@@ -68,7 +68,13 @@ const Dashboard = (props) => {
             }
         }).then(res => {
             console.log('announcements', res);
-            setAnnouncements(res.data.announcements);
+            // sort response on the basis of date
+            const sortedAnnouncements = res.data.announcements.sort((a, b) => {
+                return new Date(b.posted_date) - new Date(a.posted_date);
+            });
+            console.log('sortedAnnouncements', sortedAnnouncements);
+
+            setAnnouncements(sortedAnnouncements);
         }).catch(err => {
             console.log('err', err);
         });
@@ -237,7 +243,7 @@ const Dashboard = (props) => {
             >
                 <Toolbar />
                 {announcements.map((announcement, index) => (
-                    <MessageCard title={announcement.title} content={announcement.content} key={index} />
+                    <MessageCard title={announcement.title} content={announcement.content} date={announcement.posted_date} key={index} />
                 ))}
                 <Fab color="secondary"
                     aria-label="edit"

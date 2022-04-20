@@ -19,8 +19,10 @@ const Auth = (props) => {
         getAuth().onAuthStateChanged(user => {
             if (user) {
                 console.log('user logged in', user);
+                props.logAuth(true);
             } else {
                 console.log('user logged out');
+                props.logAuth(false);
             }
         });
     }, []);

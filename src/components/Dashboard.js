@@ -15,7 +15,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { useState, useEffect } from 'react';
-import { AddLocation, EditNotifications, ExpandLess, ExpandMore, Logout, Settings, Edit } from '@mui/icons-material';
+import { AddLocation, EditNotifications, ExpandLess, ExpandMore, Logout, Settings, Edit, VideoCall, Videocam, ContentCopy } from '@mui/icons-material';
 import { Collapse, Fab, ListItemButton } from '@mui/material';
 import { getAuth, signOut } from 'firebase/auth';
 import axios from 'axios';
@@ -224,6 +224,11 @@ const Dashboard = (props) => {
         });
     };
 
+    // start video call
+    const startVideoCall = () => {
+        const name = prompt('Enter meet link', '');
+    }
+
     const drawer = (
         <div>
             <Toolbar />
@@ -352,6 +357,17 @@ const Dashboard = (props) => {
                     <Typography variant="h6" noWrap component="div">
                         {props.clubName}{selectedProjectName === "" ? "" : " - " + selectedProjectName}
                     </Typography>
+                    {/* add video cam icon button on the right of the appbar */}
+                    {/* <IconButton
+                        color="inherit"
+                        aria-label="open drawer"
+                        edge="end"
+                        href={`https://meet.new/`}
+                        target="_blank"
+                        onClick={startVideoCall}
+                    >
+                        <Videocam />
+                    </IconButton> */}
                 </Toolbar>
             </AppBar>
             <Box
@@ -410,6 +426,17 @@ const Dashboard = (props) => {
                     }}
                 >
                     <Edit />
+                </Fab>
+                <Fab variant="extended" color="primary" aria-label="add"
+                    onClick={() => { navigator.clipboard.writeText(props.clubId) }}
+                    sx={{
+                        position: 'fixed',
+                        bottom: '1rem',
+                        zIndex: '1000',
+                    }}
+                    >
+                    <ContentCopy sx={{ mr: 1 }} />
+                    Club Code
                 </Fab>
             </Box>
         </Box>

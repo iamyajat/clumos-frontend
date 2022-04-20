@@ -48,8 +48,7 @@ const MessageCard = (props) => {
                         component="p"
                         sx={{
                             fontSize: '0.75rem',
-                            marginTop: '1rem',
-
+                            marginTop: '1.25rem',
                         }}
 
                     >

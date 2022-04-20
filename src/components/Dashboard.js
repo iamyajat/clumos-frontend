@@ -16,10 +16,12 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { useState, useEffect } from 'react';
 import { AddLocation, EditNotifications, ExpandLess, ExpandMore, Logout, Settings, Edit, VideoCall, Videocam, ContentCopy } from '@mui/icons-material';
-import { Collapse, Fab, ListItemButton } from '@mui/material';
+import { Collapse, Fab, ListItemButton, Stack } from '@mui/material';
 import { getAuth, signOut } from 'firebase/auth';
 import axios from 'axios';
 import MessageCard from './MessageCard';
+import NoAnnouncements from '../assets/noannouncements.svg';
+import logo from '../assets/logo.png';
 
 const drawerWidth = 240;
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -231,7 +233,10 @@ const Dashboard = (props) => {
 
     const drawer = (
         <div>
-            <Toolbar />
+            <Toolbar>
+                {/* add logo */}
+                <img src={logo} alt="logo" style={{ padding: "10 40", width: (drawerWidth-50) }} />
+            </Toolbar>
             <List>
                 <ListItem button key="Announcements"
                     onClick={() => {
@@ -270,7 +275,7 @@ const Dashboard = (props) => {
                         createNewProject("N");
                     }}
                 >
-                    <ListItemText primary="Add new Project" />
+                    <ListItemText primary="Create Project" />
                 </ListItemButton>
             </List>
             <Divider />
@@ -303,7 +308,7 @@ const Dashboard = (props) => {
                         createNewProject("Y");
                     }}
                 >
-                    <ListItemText primary="Add new Event" />
+                    <ListItemText primary="Create Event" />
                 </ListItemButton>
             </List>
             <Divider />
@@ -407,14 +412,38 @@ const Dashboard = (props) => {
                 sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
             >
                 <Toolbar />
-                {announcements.map((announcement, index) => (
-                    <MessageCard
-                        title={announcement.title}
-                        content={announcement.content}
-                        date={announcement.posted_date}
-                        posted_by={announcement.posted_user.user_name}
-                        key={index} />
-                ))}
+                {
+                    announcements.length > 0 ? (
+                        announcements.map((announcement, index) => (
+                            <MessageCard
+                                title={announcement.title}
+                                content={announcement.content}
+                                date={announcement.posted_date}
+                                posted_by={announcement.posted_user.user_name}
+                                key={index} />
+                        ))
+                    ) : (
+                        // align box in the middle of the screen
+                        <Stack sx={{
+                            p: 3,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            height: '80vh'
+                        }}
+
+                        >
+                            {/* add image */}
+                            <img src={NoAnnouncements} alt="no-announcements"
+                                width={[300, 400, 500]}
+                            />
+                            <br />
+                            <Typography variant="h5" component="h2">
+                                No {selectedProject === "" ? "Announcements" : "Messages"}
+                            </Typography>
+                        </Stack>
+                    )
+                }
                 <Fab color="secondary"
                     aria-label="edit"
                     onClick={selectedProject === '' ? testPostAnnouncement : postProjectMessage}
@@ -428,15 +457,16 @@ const Dashboard = (props) => {
                     <Edit />
                 </Fab>
                 <Fab variant="extended" color="primary" aria-label="add"
-                    onClick={() => { navigator.clipboard.writeText(props.clubId) }}
+                    onClick={selectedProject === "" ? () => { navigator.clipboard.writeText(props.clubId) }
+                        : () => { navigator.clipboard.writeText(selectedProject) }}
                     sx={{
                         position: 'fixed',
                         bottom: '1rem',
                         zIndex: '1000',
                     }}
-                    >
+                >
                     <ContentCopy sx={{ mr: 1 }} />
-                    Club Code
+                    {selectedProject === "" ? "Club Code" : "Project Code"}
                 </Fab>
             </Box>
         </Box>

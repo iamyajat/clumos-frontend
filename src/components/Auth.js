@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import axios from "axios";
 
 
-const Auth = () => {
+const Auth = (props) => {
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -46,16 +46,19 @@ const Auth = () => {
                         console.log('res', res);
                         setError('')
                         setSuccess('Signed up successfully!');
+                        props.logAuth(true);
                     }).catch(err => {
                         console.log('err', err);
                         setSuccess('');
                         setError(err.message);
+                        props.logAuth(false);
                     });
                 })
                 .catch((error) => {
                     console.log('err', error);
                     setError(error.message);
                     setSuccess('');
+                    props.logAuth(false);
                 });
         } else {
             signInWithEmailAndPassword(auth, email, password)
@@ -74,16 +77,19 @@ const Auth = () => {
                         console.log('res', res);
                         setError('')
                         setSuccess('Logged in successfully!');
+                        props.logAuth(true);
                     }).catch(err => {
                         console.log('err', err);
                         setSuccess('');
                         setError(err.message);
+                        props.logAuth(false);
                     });
                 })
                 .catch((error) => {
                     console.log('err', error);
                     setError(error.message);
                     setSuccess('');
+                    props.logAuth(false);
                 });
         }
     };

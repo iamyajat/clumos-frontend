@@ -19,29 +19,41 @@ function App () {
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [jwt, setJwt] = useState('');
 
+	const logAuth = (isLogIn) => {
+		if(isLogIn) {
+			const user = getAuth().currentUser;
+			console.log('user logged in', user);
+			if (jwt === '') {
+				axios.post(`${BASE_URL}/auth/login`, {
+					authtoken: user.accessToken,
+				},
+					{
+						params: {
+							apiKey: process.env.REACT_APP_API_KEY
+						}
+					}
+				).then(res => {
+					console.log('res', res);
+					setJwt(res.data.jwt);
+					setIsLoggedIn(true);
+				}).catch(err => {
+					console.log('err', err);
+					setIsLoggedIn(false);
+					// setJwt('');
+				});
+			}
+		} else {
+			console.log('user logged out');
+			setIsLoggedIn(false);
+		}
+	}
+
+
+
 	useEffect(() => {
 		getAuth().onAuthStateChanged(user => {
 			if (user) {
-				console.log('user logged in', user);
-				if (jwt === '') {
-					axios.post(`${BASE_URL}/auth/login`, {
-						authtoken: user.accessToken,
-					},
-						{
-							params: {
-								apiKey: process.env.REACT_APP_API_KEY
-							}
-						}
-					).then(res => {
-						console.log('res', res);
-						setJwt(res.data.jwt);
-						setIsLoggedIn(true);
-					}).catch(err => {
-						console.log('err', err);
-						setIsLoggedIn(false);
-						// setJwt('');
-					});
-				}
+
 			} else {
 				console.log('user logged out');
 				setIsLoggedIn(false);
@@ -52,7 +64,7 @@ function App () {
 
 	return (
 		<ThemeProvider theme={theme}>
-			{isLoggedIn ? <ClubSelector jwt={jwt} /> : <Auth />}
+			{isLoggedIn ? <ClubSelector jwt={jwt} /> : <Auth logAuth={logAuth}/>}
 		</ThemeProvider>
 	);
 }

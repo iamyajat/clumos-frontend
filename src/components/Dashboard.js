@@ -29,6 +29,8 @@ const Dashboard = (props) => {
     const { window } = props;
     const [mobileOpen, setMobileOpen] = useState(false);
     const [openProject, setOpenProject] = useState(true);
+    const [selectedProject, setSelectedProject] = useState("");
+    const [selectedProjectName, setSelectedProjectName] = useState("");
 
     const handleClickProject = () => {
         setOpenProject(!openProject);
@@ -81,6 +83,9 @@ const Dashboard = (props) => {
     };
     useEffect(() => {
         getAnnouncements();
+        getProjects();
+        setSelectedProject("");
+        setSelectedProjectName("");
     }, [props.clubId]);
 
     // post announcement
@@ -104,6 +109,7 @@ const Dashboard = (props) => {
             getAnnouncements();
         }).catch(err => {
             console.log('err', err);
+            alert('Not authorized to post an announcement');
         });
     };
 
@@ -118,23 +124,149 @@ const Dashboard = (props) => {
         postAnnouncement(announcement);
     };
 
+    //get Projects
+    const [projects, setProjects] = useState([]);
+    const getProjects = () => {
+        axios.post(`${BASE_URL}/api/getProjects`, {
+            clubId: `${props.clubId}`,
+        }, {
+            headers: {
+                Authorization: `Bearer ${props.jwt}`
+            },
+            params: {
+                apiKey: process.env.REACT_APP_API_KEY
+            }
+        }).then(res => {
+            console.log('projects', res);
+            setProjects(res.data.projects);
+        }).catch(err => {
+            console.log('err', err);
+        });
+    }
+
+    // create new project
+    const createNewProject = (isEvent) => {
+        const name = prompt('Enter name', '');
+        axios.post(`${BASE_URL}/api/newProject`,
+            {
+                "clubId": props.clubId,
+                "name": name,
+                "deadline": null,
+                "isEvent": isEvent
+            }
+            , {
+                headers: {
+                    Authorization: `Bearer ${props.jwt}`
+                },
+                params: {
+                    apiKey: process.env.REACT_APP_API_KEY
+                }
+            }).then(res => {
+                getProjects();
+                console.log('res', res);
+            }).catch(err => {
+                console.log('err', err);
+            });
+    };
+
+    //get project messages
+    const getProjectMessages = (proj_id) => {
+        axios.post(`${BASE_URL}/api/getProjectMessages`, {
+            prjId: proj_id
+        }, {
+            headers: {
+                Authorization: `Bearer ${props.jwt}`
+            },
+            params: {
+                apiKey: process.env.REACT_APP_API_KEY
+            }
+        }).then(res => {
+            console.log('announcements', res);
+            // sort response on the basis of date
+            const sortedAnnouncements = res.data.announcements.sort((a, b) => {
+                return new Date(b.posted_date) - new Date(a.posted_date);
+            });
+            console.log('sortedAnnouncements', sortedAnnouncements);
+
+            setAnnouncements(sortedAnnouncements);
+        }).catch(err => {
+            console.log('err', err);
+        });
+    }
+
+    // post project message
+    const postProjectMessage = () => {
+        const title = prompt('Enter announcement title', '');
+        const content = prompt('Enter announcement content', '');
+        const announcement = {
+            title,
+            content
+        };
+        axios.post(`${BASE_URL}/api/newProjectMessage`,
+            {
+                prjId: selectedProject,
+                title: `${announcement.title}`,
+                content: `${announcement.content}`,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${props.jwt}`
+                },
+                params: {
+                    apiKey: process.env.REACT_APP_API_KEY
+                }
+            }
+        ).then(res => {
+            console.log('res', res);
+            getProjectMessages(selectedProject);
+        }).catch(err => {
+            console.log('err', err);
+        });
+    };
+
     const drawer = (
         <div>
             <Toolbar />
             <List>
+                <ListItem button key="Announcements"
+                    onClick={() => {
+                        getAnnouncements();
+                        setSelectedProject("");
+                        setSelectedProjectName("");
+                    }}
+
+                    selected={selectedProject === ""}
+
+                >
+                    <ListItemText primary="Announcements" sx={{ pl: 2 }} />
+                </ListItem>
                 <ListItemButton onClick={handleClickProject}>
                     <ListItemText primary="Projects" sx={{ pl: 2 }} />
                     {openProject ? <ExpandLess sx={{ mr: 2 }} /> : <ExpandMore sx={{ mr: 2 }} />}
                 </ListItemButton>
                 <Collapse in={openProject} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
-                        {['VITTY', 'Thinker', 'Songified'].map((text, index) => (
-                            <ListItemButton button key={text} sx={{ pl: 6 }}>
-                                <ListItemText primary={text} />
-                            </ListItemButton>
-                        ))}
+                        {projects.map((proj, index) =>
+                            proj.is_event ? null : (<ListItemButton button key={proj.prj_id} sx={{ pl: 6 }}
+                                onClick={() => {
+                                    getProjectMessages(proj.prj_id);
+                                    setSelectedProject(proj.prj_id);
+                                    setSelectedProjectName(proj.prj_name);
+                                }}
+                                selected={selectedProject === proj.prj_id}
+                            >
+                                <ListItemText primary={proj.prj_name} />
+                            </ListItemButton>)
+                        )}
                     </List>
                 </Collapse>
+                <ListItemButton button sx={{ pl: 6 }}
+                    onClick={() => {
+                        createNewProject("N");
+                    }}
+                >
+                    <ListItemText primary="Add new Project" />
+                </ListItemButton>
             </List>
             <Divider />
             <List>
@@ -144,13 +276,30 @@ const Dashboard = (props) => {
                 </ListItemButton>
                 <Collapse in={openEvent} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
-                        {['WT22', 'Hexathon', 'DJ22'].map((text, index) => (
-                            <ListItemButton button key={text} sx={{ pl: 6 }}>
-                                <ListItemText primary={text} />
-                            </ListItemButton>
-                        ))}
+                        {projects.map((proj, index) =>
+                            proj.is_event ? (
+                                <ListItemButton button key={proj.prj_id} sx={{ pl: 6 }}
+                                    onClick={() => {
+                                        getProjectMessages(proj.prj_id);
+                                        setSelectedProject(proj.prj_id);
+                                        setSelectedProjectName(proj.prj_name);
+                                    }}
+                                    selected={selectedProject === proj.prj_id}
+                                >
+                                    <ListItemText primary={proj.prj_name} />
+                                </ListItemButton>
+                            ) : null
+                        )}
+
                     </List>
                 </Collapse>
+                <ListItemButton button sx={{ pl: 6 }}
+                    onClick={() => {
+                        createNewProject("Y");
+                    }}
+                >
+                    <ListItemText primary="Add new Event" />
+                </ListItemButton>
             </List>
             <Divider />
             <List>
@@ -201,7 +350,7 @@ const Dashboard = (props) => {
                         <MenuIcon />
                     </IconButton>
                     <Typography variant="h6" noWrap component="div">
-                        {props.clubName}
+                        {props.clubName}{selectedProjectName === "" ? "" : " - " + selectedProjectName}
                     </Typography>
                 </Toolbar>
             </AppBar>
@@ -243,11 +392,16 @@ const Dashboard = (props) => {
             >
                 <Toolbar />
                 {announcements.map((announcement, index) => (
-                    <MessageCard title={announcement.title} content={announcement.content} date={announcement.posted_date} key={index} />
+                    <MessageCard
+                        title={announcement.title}
+                        content={announcement.content}
+                        date={announcement.posted_date}
+                        posted_by={announcement.posted_user.user_name}
+                        key={index} />
                 ))}
                 <Fab color="secondary"
                     aria-label="edit"
-                    onClick={testPostAnnouncement}
+                    onClick={selectedProject === '' ? testPostAnnouncement : postProjectMessage}
                     sx={{
                         position: 'fixed',
                         bottom: '1rem',

@@ -1,4 +1,4 @@
-import { Add, Logout } from '@mui/icons-material'
+import { Add, JoinFull, Logout } from '@mui/icons-material'
 import { Avatar, Container, Divider, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, Typography } from '@mui/material'
 import axios from 'axios';
 import { getAuth, signOut } from "firebase/auth";
@@ -44,10 +44,40 @@ const ClubSelector = (props) => {
         });
     };
 
+    // join club
+    const joinClub = (clubId) => {
+        axios.post(`${BASE_URL}/api/joinClub`,
+            {
+                clubId: `${clubId}`,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${props.jwt}`
+                },
+                params: {
+                    apiKey: process.env.REACT_APP_API_KEY
+                }
+            }
+        ).then(res => {
+            console.log('res', res);
+            getClubs();
+        }).catch(err => {
+            console.log('err', err);
+        });
+    };
+
+
     const testAddClubs = () => {
         const clubName = prompt('Enter club name', '')
         if (clubName) {
             addClub(clubName);
+        }
+    };
+
+    const testJoinClubs = () => {
+        const clubId = prompt('Enter club code', '')
+        if (clubId) {
+            joinClub(clubId);
         }
     };
 
@@ -130,7 +160,28 @@ const ClubSelector = (props) => {
                         <ListItemText primary={club.club_name} />
                     </ListItem>)
                 )}
-
+                <Divider
+                    sx={{
+                        margin: '0.5rem 0',
+                    }}
+                />
+                <ListItem button key="Join a Club"
+                    sx={{
+                        width: '300px',
+                        alignItems: 'center',
+                    }}
+                    onClick={testJoinClubs}
+                >
+                    <ListItemIcon
+                        sx={{
+                            marginLeft: '0.5rem',
+                            marginRight: '-0.5rem',
+                        }}
+                    >
+                        <JoinFull />
+                    </ListItemIcon>
+                    <ListItemText primary="Join a Club" />
+                </ListItem>
                 <ListItem button key="Create a Club"
                     sx={{
                         width: '300px',

@@ -5,17 +5,15 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import MailIcon from '@mui/icons-material/Mail';
 import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { useState, useEffect } from 'react';
-import { AddLocation, EditNotifications, ExpandLess, ExpandMore, Logout, Settings, Edit, Videocam, ContentCopy, MessageRounded, CallEnd } from '@mui/icons-material';
+import { ExpandLess, ExpandMore, Logout, Settings, Edit, Videocam, ContentCopy, CallEnd, ListAlt } from '@mui/icons-material';
 import { Collapse, Fab, ListItemButton, Stack } from '@mui/material';
 import { getAuth, signOut } from 'firebase/auth';
 import axios from 'axios';
@@ -23,6 +21,7 @@ import MessageCard from './MessageCard';
 import NoAnnouncements from '../assets/noannouncements.svg';
 import logo from '../assets/logo.png';
 import VideoCall from './VideoCall';
+import Milestones from './Milestones';
 
 const drawerWidth = 240;
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -91,6 +90,7 @@ const Dashboard = (props) => {
         getProjects();
         setSelectedProject("");
         setSelectedProjectName("");
+        setShowMilestone(false);
     }, [props.clubId]);
 
     // post announcement
@@ -123,11 +123,14 @@ const Dashboard = (props) => {
     const testPostAnnouncement = () => {
         const title = prompt('Enter announcement title', '');
         const content = prompt('Enter announcement content', '');
-        const announcement = {
-            title,
-            content
-        };
-        postAnnouncement(announcement);
+        if (title && content) {
+            postAnnouncement({
+                title: title,
+                content: content
+            });
+        } else {
+            alert('Please enter title and content');
+        }
     };
 
     //get Projects
@@ -254,13 +257,16 @@ const Dashboard = (props) => {
 
     // test post project message
     const postTestProjectMessage = () => {
-        const title = prompt('Enter announcement title', '');
-        const content = prompt('Enter announcement content', '');
-        const announcement = {
-            title,
-            content
-        };
-        postProjectMessage(announcement);
+        const title = prompt('Enter message title', '');
+        const content = prompt('Enter message content', '');
+        if (title && content) {
+            postProjectMessage({
+                title: title,
+                content: content
+            });
+        } else {
+            alert('Please enter title and content');
+        }
     }
 
     // start video call
@@ -283,6 +289,8 @@ const Dashboard = (props) => {
         }
     }
 
+    const [showMilestone, setShowMilestone] = useState(false);
+
     const drawer = (
         <div>
             <Toolbar>
@@ -296,6 +304,7 @@ const Dashboard = (props) => {
                         getAnnouncements();
                         setSelectedProject("");
                         setSelectedProjectName("");
+                        setShowMilestone(false);
                     }}
                     selected={selectedProject === ""}
                     sx={{
@@ -317,6 +326,7 @@ const Dashboard = (props) => {
                                     getProjectMessages(proj.prj_id);
                                     setSelectedProject(proj.prj_id);
                                     setSelectedProjectName(proj.prj_name);
+                                    setShowMilestone(false);
                                     setVideoCall(false);
                                 }}
                                 selected={selectedProject === proj.prj_id}
@@ -365,6 +375,7 @@ const Dashboard = (props) => {
                                         getProjectMessages(proj.prj_id);
                                         setSelectedProject(proj.prj_id);
                                         setSelectedProjectName(proj.prj_name);
+                                        setShowMilestone(false);
                                         setVideoCall(false);
                                     }}
                                     selected={selectedProject === proj.prj_id}
@@ -401,14 +412,12 @@ const Dashboard = (props) => {
             </List>
             <Divider />
             <List>
-                {['Settings'].map((text, index) => (
-                    <ListItem button key={text}>
-                        <ListItemIcon>
-                            <Settings sx={{ ml: 1 }} />
-                        </ListItemIcon>
-                        <ListItemText primary={text} />
-                    </ListItem>
-                ))}
+                <ListItem button>
+                    <ListItemIcon>
+                        <ListAlt sx={{ ml: 1 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="My Milestones" />
+                </ListItem>
             </List>
             {/* logout button stick at bottom of drawer */}
             <List>
@@ -491,37 +500,54 @@ const Dashboard = (props) => {
                 <Toolbar />
                 {
                     videoCall ? (<VideoCall person={props.person} roomName={`clumos-${props.clubId}-${selectedProject}`} />) :
-                        announcements.length > 0 ? (
-                            announcements.map((announcement, index) => (
-                                <MessageCard
-                                    title={announcement.title}
-                                    content={announcement.content}
-                                    date={announcement.posted_date}
-                                    posted_by={announcement.posted_user.user_name}
-                                    key={index} />
-                            ))
-                        ) : (
-                            // align box in the middle of the screen
-                            <Stack sx={{
-                                p: 3,
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                height: '80vh'
-                            }}
+                        showMilestone ? (<Milestones projectId={selectedProject} jwt={props.jwt} />) :
+                            announcements.length > 0 ? (
+                                announcements.map((announcement, index) => (
+                                    <MessageCard
+                                        title={announcement.title}
+                                        content={announcement.content}
+                                        date={announcement.posted_date}
+                                        posted_by={announcement.posted_user.user_name}
+                                        key={index} />
+                                ))
+                            ) : (
+                                // align box in the middle of the screen
+                                <Stack sx={{
+                                    p: 3,
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    height: '80vh'
+                                }}
 
-                            >
-                                {/* add image */}
-                                <img src={NoAnnouncements} alt="no-announcements"
-                                    width={[300, 400, 500]}
-                                />
-                                <br />
-                                <Typography variant="h5" component="h2">
-                                    No {selectedProject === "" ? "Announcements" : "Messages"}
-                                </Typography>
-                            </Stack>
-                        )
+                                >
+                                    {/* add image */}
+                                    <img src={NoAnnouncements} alt="no-announcements"
+                                        width={[300, 400, 500]}
+                                    />
+                                    <br />
+                                    <Typography variant="h5" component="h2">
+                                        No {selectedProject === "" ? "Announcements" : "Messages"}
+                                    </Typography>
+                                </Stack>
+                            )
                 }
+                {selectedProject !== "" ? (
+
+                    <Fab color="success"
+                        aria-label="edit"
+                        onClick={() => {
+                            setShowMilestone(true);
+                        }}
+                        sx={{
+                            position: 'fixed',
+                            bottom: '10rem',
+                            right: '1rem',
+                            zIndex: '1000',
+                        }}
+                    >
+                        <ListAlt />
+                    </Fab>) : null}
                 {props.role == 1 || selectedProject !== "" ? (
                     <Fab color="secondary"
                         aria-label="edit"

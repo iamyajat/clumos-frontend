@@ -18,6 +18,7 @@ const BASE_URL = process.env.REACT_APP_API_URL;
 function App () {
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [jwt, setJwt] = useState('');
+	const [username, setUsername] = useState('');
 
 	const logAuth = (isLogIn) => {
 		if(isLogIn) {
@@ -35,6 +36,7 @@ function App () {
 				).then(res => {
 					console.log('res', res);
 					setJwt(res.data.jwt);
+					setUsername(res.data.user.name);
 					setIsLoggedIn(true);
 				}).catch(err => {
 					console.log('err', err);
@@ -64,7 +66,7 @@ function App () {
 
 	return (
 		<ThemeProvider theme={theme}>
-			{isLoggedIn ? <ClubSelector jwt={jwt} /> : <Auth logAuth={logAuth}/>}
+			{isLoggedIn ? <ClubSelector jwt={jwt} name={username}/> : <Auth logAuth={logAuth}/>}
 		</ThemeProvider>
 	);
 }

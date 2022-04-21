@@ -15,13 +15,14 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { useState, useEffect } from 'react';
-import { AddLocation, EditNotifications, ExpandLess, ExpandMore, Logout, Settings, Edit, VideoCall, Videocam, ContentCopy } from '@mui/icons-material';
+import { AddLocation, EditNotifications, ExpandLess, ExpandMore, Logout, Settings, Edit, Videocam, ContentCopy, MessageRounded } from '@mui/icons-material';
 import { Collapse, Fab, ListItemButton, Stack } from '@mui/material';
 import { getAuth, signOut } from 'firebase/auth';
 import axios from 'axios';
 import MessageCard from './MessageCard';
 import NoAnnouncements from '../assets/noannouncements.svg';
 import logo from '../assets/logo.png';
+import VideoCall from './VideoCall';
 
 const drawerWidth = 240;
 const BASE_URL = process.env.REACT_APP_API_URL;
@@ -241,16 +242,30 @@ const Dashboard = (props) => {
     }
 
     // start video call
+    const [videoCall, setVideoCall] = useState(false);
     const startVideoCall = () => {
-        const name = prompt('Enter meet link', '');
+        setVideoCall(!videoCall);
+        if (videoCall) {
+            if (selectedProjectName !== "")
+                postProjectMessage({
+                    title: "Video call started",
+                    content: "I have started a video call. Please join."
+                });
+            else
+                postAnnouncement({
+                    title: "Video call started",
+                    content: "I have started a video call. Please join."
+                });
+        }
     }
 
     const drawer = (
         <div>
             <Toolbar>
                 {/* add logo */}
-                <img src={logo} alt="logo" style={{ padding: "10 40", width: (drawerWidth - 50) }} />
+                <img src={logo} alt="logo" style={{ paddingLeft: "1.25rem", paddingRight: "1.25rem", width: "100%" }} />
             </Toolbar>
+            <Divider />
             <List>
                 <ListItem button key="Announcements"
                     onClick={() => {
@@ -258,12 +273,14 @@ const Dashboard = (props) => {
                         setSelectedProject("");
                         setSelectedProjectName("");
                     }}
-
                     selected={selectedProject === ""}
-
+                    sx={{
+                        mb: "0.5rem",
+                    }}
                 >
                     <ListItemText primary="Announcements" sx={{ pl: 2 }} />
                 </ListItem>
+                <Divider />
                 <ListItemButton onClick={handleClickProject}>
                     <ListItemText primary="Projects" sx={{ pl: 2 }} />
                     {openProject ? <ExpandLess sx={{ mr: 2 }} /> : <ExpandMore sx={{ mr: 2 }} />}
@@ -271,11 +288,12 @@ const Dashboard = (props) => {
                 <Collapse in={openProject} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
                         {projects.map((proj, index) =>
-                            proj.is_event ? null : (<ListItemButton button key={proj.prj_id} sx={{ pl: 6 }}
+                            proj.is_event === "Y" ? null : (<ListItemButton button key={proj.prj_id} sx={{ pl: 6 }}
                                 onClick={() => {
                                     getProjectMessages(proj.prj_id);
                                     setSelectedProject(proj.prj_id);
                                     setSelectedProjectName(proj.prj_name);
+                                    setVideoCall(false);
                                 }}
                                 selected={selectedProject === proj.prj_id}
                             >
@@ -301,12 +319,13 @@ const Dashboard = (props) => {
                 <Collapse in={openEvent} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
                         {projects.map((proj, index) =>
-                            proj.is_event ? (
+                            proj.is_event === "Y" ? (
                                 <ListItemButton button key={proj.prj_id} sx={{ pl: 6 }}
                                     onClick={() => {
                                         getProjectMessages(proj.prj_id);
                                         setSelectedProject(proj.prj_id);
                                         setSelectedProjectName(proj.prj_name);
+                                        setVideoCall(false);
                                     }}
                                     selected={selectedProject === proj.prj_id}
                                 >
@@ -376,17 +395,6 @@ const Dashboard = (props) => {
                     <Typography variant="h6" noWrap component="div">
                         {props.clubName}{selectedProjectName === "" ? "" : " - " + selectedProjectName}
                     </Typography>
-                    {/* add video cam icon button on the right of the appbar */}
-                    {/* <IconButton
-                        color="inherit"
-                        aria-label="open drawer"
-                        edge="end"
-                        href={`https://meet.new/`}
-                        target="_blank"
-                        onClick={startVideoCall}
-                    >
-                        <Videocam />
-                    </IconButton> */}
                 </Toolbar>
             </AppBar>
             <Box
@@ -427,36 +435,37 @@ const Dashboard = (props) => {
             >
                 <Toolbar />
                 {
-                    announcements.length > 0 ? (
-                        announcements.map((announcement, index) => (
-                            <MessageCard
-                                title={announcement.title}
-                                content={announcement.content}
-                                date={announcement.posted_date}
-                                posted_by={announcement.posted_user.user_name}
-                                key={index} />
-                        ))
-                    ) : (
-                        // align box in the middle of the screen
-                        <Stack sx={{
-                            p: 3,
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            height: '80vh'
-                        }}
+                    videoCall ? (<VideoCall name={`${props.name}`} roomName={`clumos-${props.clubId}-${selectedProject}`} />) :
+                        announcements.length > 0 ? (
+                            announcements.map((announcement, index) => (
+                                <MessageCard
+                                    title={announcement.title}
+                                    content={announcement.content}
+                                    date={announcement.posted_date}
+                                    posted_by={announcement.posted_user.user_name}
+                                    key={index} />
+                            ))
+                        ) : (
+                            // align box in the middle of the screen
+                            <Stack sx={{
+                                p: 3,
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                height: '80vh'
+                            }}
 
-                        >
-                            {/* add image */}
-                            <img src={NoAnnouncements} alt="no-announcements"
-                                width={[300, 400, 500]}
-                            />
-                            <br />
-                            <Typography variant="h5" component="h2">
-                                No {selectedProject === "" ? "Announcements" : "Messages"}
-                            </Typography>
-                        </Stack>
-                    )
+                            >
+                                {/* add image */}
+                                <img src={NoAnnouncements} alt="no-announcements"
+                                    width={[300, 400, 500]}
+                                />
+                                <br />
+                                <Typography variant="h5" component="h2">
+                                    No {selectedProject === "" ? "Announcements" : "Messages"}
+                                </Typography>
+                            </Stack>
+                        )
                 }
                 <Fab color="secondary"
                     aria-label="edit"
@@ -469,6 +478,19 @@ const Dashboard = (props) => {
                     }}
                 >
                     <Edit />
+                </Fab>
+
+                <Fab color="primary"
+                    aria-label="edit"
+                    onClick={startVideoCall}
+                    sx={{
+                        position: 'fixed',
+                        bottom: '5.5rem',
+                        right: '1rem',
+                        zIndex: '1000',
+                    }}
+                >
+                    {videoCall ? (<MessageRounded />) : (<Videocam />)}
                 </Fab>
                 <Fab variant="extended" color="primary" aria-label="add"
                     onClick={selectedProject === "" ? () => { navigator.clipboard.writeText(props.clubId) }

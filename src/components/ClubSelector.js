@@ -110,7 +110,7 @@ const ClubSelector = (props) => {
         getClubs();
     }, []);
 
-    return clubId ? <Dashboard clubId={clubId} clubName={clubName} jwt={props.jwt} /> : (
+    return clubId ? <Dashboard clubId={clubId} clubName={clubName} jwt={props.jwt} name={props.name} /> : (
         <Container
             sx={{
                 alignItems: 'center',

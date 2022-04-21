@@ -21,6 +21,7 @@ const ClubSelector = (props) => {
     const [clubs, setClubs] = useState([]);
     const [clubId, setClubId] = useState("");
     const [clubName, setClubName] = useState("");
+    const [role, setRole] = useState(1);
 
     // add clubs
     const addClub = (clubName) => {
@@ -99,8 +100,9 @@ const ClubSelector = (props) => {
     };
 
     // open dashboard with club_id
-    const openDashboard = (club_id, club_name) => {
+    const openDashboard = (club_id, club_name, role_club) => {
         setClubName(club_name);
+        setRole(role_club);
         setClubId(club_id);
         console.log('clubName', clubName);
     }
@@ -110,7 +112,7 @@ const ClubSelector = (props) => {
         getClubs();
     }, []);
 
-    return clubId ? <Dashboard clubId={clubId} clubName={clubName} jwt={props.jwt} name={props.name} /> : (
+    return clubId ? <Dashboard clubId={clubId} clubName={clubName} jwt={props.jwt} person={props.person} role={role}/> : (
         <Container
             sx={{
                 alignItems: 'center',
@@ -150,7 +152,7 @@ const ClubSelector = (props) => {
                             width: '300px',
                             alignItems: 'center',
                         }}
-                        onClick={() => openDashboard(club.club_id, club.club_name)}
+                        onClick={() => openDashboard(club.club_id, club.club_name, club.role)}
                     >
                         <ListItemAvatar>
                             <Avatar src={club.logo_url == "" ?

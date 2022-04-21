@@ -15,7 +15,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import { useState, useEffect } from 'react';
-import { AddLocation, EditNotifications, ExpandLess, ExpandMore, Logout, Settings, Edit, Videocam, ContentCopy, MessageRounded } from '@mui/icons-material';
+import { AddLocation, EditNotifications, ExpandLess, ExpandMore, Logout, Settings, Edit, Videocam, ContentCopy, MessageRounded, CallEnd } from '@mui/icons-material';
 import { Collapse, Fab, ListItemButton, Stack } from '@mui/material';
 import { getAuth, signOut } from 'firebase/auth';
 import axios from 'axios';
@@ -38,6 +38,8 @@ const Dashboard = (props) => {
     const handleClickProject = () => {
         setOpenProject(!openProject);
     };
+
+    const roleName = props.role == 1 ? "Admin" : "Member";
 
     const [openEvent, setOpenEvent] = useState(true);
 
@@ -148,6 +150,26 @@ const Dashboard = (props) => {
         });
     }
 
+    // join project
+    const joinProject = () => {
+        const projId = prompt('Enter code', '');
+        axios.post(`${BASE_URL}/api/joinProject`, {
+            prjId: `${projId}`,
+        }, {
+            headers: {
+                Authorization: `Bearer ${props.jwt}`
+            },
+            params: {
+                apiKey: process.env.REACT_APP_API_KEY
+            }
+        }).then(res => {
+            console.log('join project', res);
+            getProjects();
+        }).catch(err => {
+            console.log('err', err);
+        });
+    }
+
     // create new project
     const createNewProject = (isEvent) => {
         const name = prompt('Enter name', '');
@@ -251,11 +273,13 @@ const Dashboard = (props) => {
                     title: "Video call started",
                     content: "I have started a video call. Please join."
                 });
-            else
-                postAnnouncement({
-                    title: "Video call started",
-                    content: "I have started a video call. Please join."
-                });
+            else {
+                if (props.role == 1)
+                    postAnnouncement({
+                        title: "Video call started",
+                        content: "I have started a video call. Please join."
+                    });
+            }
         }
     }
 
@@ -302,13 +326,29 @@ const Dashboard = (props) => {
                         )}
                     </List>
                 </Collapse>
-                <ListItemButton button sx={{ pl: 6 }}
+                {/* <Divider
+                    sx={{
+                        ml: "0.75rem",
+                        mr: "0.75rem",
+                        mb: "0.5rem",
+                    }}
+
+                /> */}
+                <ListItemButton button sx={{ pl: 4 }}
                     onClick={() => {
-                        createNewProject("N");
+                        joinProject();
                     }}
                 >
-                    <ListItemText primary="Create Project" />
+                    <ListItemText primary="Join Project" />
                 </ListItemButton>
+                {props.role == 1 ? (
+                    <ListItemButton button sx={{ pl: 4 }}
+                        onClick={() => {
+                            createNewProject("N");
+                        }}
+                    >
+                        <ListItemText primary="Create Project" />
+                    </ListItemButton>) : null}
             </List>
             <Divider />
             <List>
@@ -336,13 +376,28 @@ const Dashboard = (props) => {
 
                     </List>
                 </Collapse>
-                <ListItemButton button sx={{ pl: 6 }}
+                {/* <Divider
+                    sx={{
+                        ml: "0.75rem",
+                        mr: "0.75rem",
+                        mb: "0.5rem",
+                    }}
+                /> */}
+                <ListItemButton button sx={{ pl: 4 }}
                     onClick={() => {
-                        createNewProject("Y");
+                        joinProject();
                     }}
                 >
-                    <ListItemText primary="Create Event" />
+                    <ListItemText primary="Join Event" />
                 </ListItemButton>
+                {props.role == 1 ? (
+                    <ListItemButton button sx={{ pl: 4 }}
+                        onClick={() => {
+                            createNewProject("Y");
+                        }}
+                    >
+                        <ListItemText primary="Create Event" />
+                    </ListItemButton>) : null}
             </List>
             <Divider />
             <List>
@@ -435,7 +490,7 @@ const Dashboard = (props) => {
             >
                 <Toolbar />
                 {
-                    videoCall ? (<VideoCall name={`${props.name}`} roomName={`clumos-${props.clubId}-${selectedProject}`} />) :
+                    videoCall ? (<VideoCall person={props.person} roomName={`clumos-${props.clubId}-${selectedProject}`} />) :
                         announcements.length > 0 ? (
                             announcements.map((announcement, index) => (
                                 <MessageCard
@@ -467,31 +522,48 @@ const Dashboard = (props) => {
                             </Stack>
                         )
                 }
-                <Fab color="secondary"
-                    aria-label="edit"
-                    onClick={selectedProject === '' ? testPostAnnouncement : postTestProjectMessage}
-                    sx={{
-                        position: 'fixed',
-                        bottom: '1rem',
-                        right: '1rem',
-                        zIndex: '1000',
-                    }}
-                >
-                    <Edit />
-                </Fab>
+                {props.role == 1 || selectedProject !== "" ? (
+                    <Fab color="secondary"
+                        aria-label="edit"
+                        onClick={selectedProject === '' ? testPostAnnouncement : postTestProjectMessage}
+                        sx={{
+                            position: 'fixed',
+                            bottom: '1rem',
+                            right: '1rem',
+                            zIndex: '1000',
+                        }}
+                    >
+                        <Edit />
+                    </Fab>) : null}
 
-                <Fab color="primary"
-                    aria-label="edit"
-                    onClick={startVideoCall}
-                    sx={{
-                        position: 'fixed',
-                        bottom: '5.5rem',
-                        right: '1rem',
-                        zIndex: '1000',
-                    }}
-                >
-                    {videoCall ? (<MessageRounded />) : (<Videocam />)}
-                </Fab>
+                {props.role == 1 || selectedProject !== "" ? (
+
+                    <Fab color={videoCall ? "error" : "primary"}
+                        aria-label="edit"
+                        onClick={startVideoCall}
+                        sx={{
+                            position: 'fixed',
+                            bottom: '5.5rem',
+                            right: '1rem',
+                            zIndex: '1000',
+                        }}
+                    >
+                        {videoCall ? (<CallEnd />) : (<Videocam />)}
+                    </Fab>) : (
+
+                    <Fab color={videoCall ? "error" : "primary"}
+                        aria-label="edit"
+                        onClick={startVideoCall}
+                        sx={{
+                            position: 'fixed',
+                            bottom: '1rem',
+                            right: '1rem',
+                            zIndex: '1000',
+                        }}
+                    >
+                        {videoCall ? (<CallEnd />) : (<Videocam />)}
+                    </Fab>)
+                }
                 <Fab variant="extended" color="primary" aria-label="add"
                     onClick={selectedProject === "" ? () => { navigator.clipboard.writeText(props.clubId) }
                         : () => { navigator.clipboard.writeText(selectedProject) }}

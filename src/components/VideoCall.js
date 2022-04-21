@@ -13,11 +13,14 @@ const VideoCall = (props) => {
             roomName={props.roomName}
             // onApiReady={externalApi => { this.api = externalApi }}
             getIFrameRef={handleJitsiIFrameRef}
-            userInfo={{ displayName: props.name}}
-            configOverwrite={{  // options here: https://github.com/jitsi/jitsi-meet/blob/master/config.js
-                enableWelcomePage: true,  // this doesn't seem to be working...
+            userInfo={{
+                displayName: props.person.name,
+                email: props.person.email,
+            }}
+            configOverwrite={{
+                enableWelcomePage: true,
                 readOnlyName: true,
-                toolbarButtons: ['camera', 'microphone'],
+                toolbarButtons: ['camera', 'microphone', 'chat'],
                 enableCalendarIntegration: false
             }}
             interfaceConfigOverwrite={{

@@ -9,14 +9,44 @@ const Milestones = (props) => {
     const [milestones, setMilestones] = useState([]);
 
     useEffect(() => {
-        getProjectMilestones(props.projectId);
-    }, []);
+        if (props.projectId !== "") {
+            getProjectMilestones(props.projectId);
+        } else {
+            getUserMilestones();
+        }
+    }, [props.projectId]);
 
     //get milestone
     const getProjectMilestones = (proj_id) => {
         console.log('proj_id', proj_id);
+        setMilestones([]);
         axios.post(`${BASE_URL}/api/getProjectMilestones`, {
             prjId: proj_id
+        }, {
+            headers: {
+                Authorization: `Bearer ${props.jwt}`
+            },
+            params: {
+                apiKey: process.env.REACT_APP_API_KEY
+            }
+        }).then(res => {
+            console.log('milestones', res);
+            // sort response on the basis of date
+            const sortedMilestones = res.data.milestone.sort((a, b) => {
+                return new Date(a.created_on) - new Date(b.created_on);
+            });
+            console.log('sortedMilestone', sortedMilestones);
+
+            setMilestones(sortedMilestones);
+        }).catch(err => {
+            console.log('err', err);
+        });
+    }
+
+    const getUserMilestones = () => {
+        setMilestones([]);
+        axios.post(`${BASE_URL}/api/getUserMilestones`, {
+            clubId: props.clubId
         }, {
             headers: {
                 Authorization: `Bearer ${props.jwt}`
@@ -70,16 +100,17 @@ const Milestones = (props) => {
             {milestones.map((milestone, index) => {
                 return (
                     <ListItem key={index}>
-                        <ListItemText primary={milestone.content} secondary={milestone.deadline} />
+                        <ListItemText primary={milestone.content} secondary={milestone.project_name} />
                     </ListItem>
                 )
             })}
-            <Button color="primary"
-                aria-label="edit"
-                startIcon={<Add />}
-                onClick={newMilestone}>
-                Add Milestone
-            </Button>
+            {props.projectId !== "" ? (
+                <Button color="primary"
+                    aria-label="edit"
+                    startIcon={<Add />}
+                    onClick={newMilestone}>
+                    Add Milestone
+                </Button>) : null}
         </List>
     )
 }

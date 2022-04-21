@@ -412,7 +412,14 @@ const Dashboard = (props) => {
             </List>
             <Divider />
             <List>
-                <ListItem button>
+                <ListItem button
+                onClick={() => {
+                    setSelectedProject("");
+                    setSelectedProjectName("");
+                    setShowMilestone(true);
+                    setVideoCall(false);
+                }}
+                >
                     <ListItemIcon>
                         <ListAlt sx={{ ml: 1 }} />
                     </ListItemIcon>
@@ -500,7 +507,7 @@ const Dashboard = (props) => {
                 <Toolbar />
                 {
                     videoCall ? (<VideoCall person={props.person} roomName={`clumos-${props.clubId}-${selectedProject}`} />) :
-                        showMilestone ? (<Milestones projectId={selectedProject} jwt={props.jwt} />) :
+                        showMilestone ? (<Milestones projectId={selectedProject} jwt={props.jwt} clubId={props.clubId}/>) :
                             announcements.length > 0 ? (
                                 announcements.map((announcement, index) => (
                                     <MessageCard

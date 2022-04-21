@@ -108,7 +108,8 @@ const Dashboard = (props) => {
             }
         ).then(res => {
             console.log('res', res);
-            getAnnouncements();
+            if (selectedProject === "")
+                getAnnouncements();
         }).catch(err => {
             console.log('err', err);
             alert('Not authorized to post an announcement');
@@ -165,6 +166,14 @@ const Dashboard = (props) => {
                 }
             }).then(res => {
                 getProjects();
+                const PE = isEvent == "Y" ? "event" : "project";
+                const title = `Join ${PE} ${name}`
+                const content = `I have created ${name}. Join the ${PE} using the code "${res.data.prj_id}".`
+                const ann = {
+                    title,
+                    content
+                };
+                postAnnouncement(ann)
                 console.log('res', res);
             }).catch(err => {
                 console.log('err', err);
@@ -197,13 +206,7 @@ const Dashboard = (props) => {
     }
 
     // post project message
-    const postProjectMessage = () => {
-        const title = prompt('Enter announcement title', '');
-        const content = prompt('Enter announcement content', '');
-        const announcement = {
-            title,
-            content
-        };
+    const postProjectMessage = (announcement) => {
         axios.post(`${BASE_URL}/api/newProjectMessage`,
             {
                 prjId: selectedProject,
@@ -226,6 +229,17 @@ const Dashboard = (props) => {
         });
     };
 
+    // test post project message
+    const postTestProjectMessage = () => {
+        const title = prompt('Enter announcement title', '');
+        const content = prompt('Enter announcement content', '');
+        const announcement = {
+            title,
+            content
+        };
+        postProjectMessage(announcement);
+    }
+
     // start video call
     const startVideoCall = () => {
         const name = prompt('Enter meet link', '');
@@ -235,7 +249,7 @@ const Dashboard = (props) => {
         <div>
             <Toolbar>
                 {/* add logo */}
-                <img src={logo} alt="logo" style={{ padding: "10 40", width: (drawerWidth-50) }} />
+                <img src={logo} alt="logo" style={{ padding: "10 40", width: (drawerWidth - 50) }} />
             </Toolbar>
             <List>
                 <ListItem button key="Announcements"
@@ -446,7 +460,7 @@ const Dashboard = (props) => {
                 }
                 <Fab color="secondary"
                     aria-label="edit"
-                    onClick={selectedProject === '' ? testPostAnnouncement : postProjectMessage}
+                    onClick={selectedProject === '' ? testPostAnnouncement : postTestProjectMessage}
                     sx={{
                         position: 'fixed',
                         bottom: '1rem',
